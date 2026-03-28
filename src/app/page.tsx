@@ -1,65 +1,106 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useCallback, useRef } from "react";
+import { MOCK_JOBS, MOCK_DEVICES, MOCK_TELEMETRY, buildSummaries } from "./mockData";
+import { ModelJob, QuantLevel } from "./types";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
+import OverviewPanel from "./components/OverviewPanel";
+import UploadPanel from "./components/UploadPanel";
+import TelemetryPanel from "./components/TelemetryPanel";
+import ComparePanel from "./components/ComparePanel";
+import DevicesPanel from "./components/DevicesPanel";
+
+export type ActiveView = "overview" | "upload" | "telemetry" | "compare" | "devices";
+
+export default function EdgeBenchDashboard() {
+  const [activeView, setActiveView] = useState<ActiveView>("overview");
+  const [jobs, setJobs] = useState<ModelJob[]>(MOCK_JOBS);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedJobId, setSelectedJobId] = useState<string>("job-001");
+
+  const summaries = buildSummaries(jobs, MOCK_DEVICES, MOCK_TELEMETRY);
+
+  const handleJobSelect = useCallback((id: string) => {
+    setSelectedJobId(id);
+    setActiveView("telemetry");
+  }, []);
+
+  const handleUploadComplete = useCallback((job: ModelJob) => {
+    setJobs((prev) => [job, ...prev]);
+    setSelectedJobId(job.id);
+    setActiveView("telemetry");
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        background: "var(--surface)",
+      }}
+    >
+      <Sidebar
+        open={sidebarOpen}
+        activeView={activeView}
+        onNavigate={setActiveView}
+        jobs={jobs}
+        onJobSelect={handleJobSelect}
+      />
+
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          transition: "margin-left 0.3s ease",
+        }}
+      >
+        <Header
+          activeView={activeView}
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen((o) => !o)}
+          connectedDevices={MOCK_DEVICES.filter((d) => d.connected).length}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <main
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "28px 32px",
+          }}
+        >
+          {activeView === "overview" && (
+            <OverviewPanel
+              jobs={jobs}
+              devices={MOCK_DEVICES}
+              summaries={summaries}
+              onJobSelect={handleJobSelect}
+              onNavigate={setActiveView}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          )}
+          {activeView === "upload" && (
+            <UploadPanel onUploadComplete={handleUploadComplete} />
+          )}
+          {activeView === "telemetry" && (
+            <TelemetryPanel
+              jobs={jobs}
+              devices={MOCK_DEVICES}
+              telemetry={MOCK_TELEMETRY}
+              selectedJobId={selectedJobId}
+              onJobChange={setSelectedJobId}
+            />
+          )}
+          {activeView === "compare" && (
+            <ComparePanel summaries={summaries} devices={MOCK_DEVICES} jobs={jobs} />
+          )}
+          {activeView === "devices" && (
+            <DevicesPanel devices={MOCK_DEVICES} />
+          )}
+        </main>
+      </div>
     </div>
   );
 }
