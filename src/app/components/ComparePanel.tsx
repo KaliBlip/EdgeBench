@@ -137,7 +137,7 @@ export default function ComparePanel({ summaries, devices, jobs }: Props) {
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(193,200,194,0.3)" vertical={false} />
                             <XAxis
                                 dataKey="name"
-                                tick={{ fontFamily: "Inter,sans-serif", fontSize: 11, fill: "var(--on-surface-variant)", whiteSpace: "pre" }}
+                                tick={{ fontFamily: "Inter,sans-serif", fontSize: 11, fill: "var(--on-surface-variant)" }}
                             />
                             <YAxis
                                 tick={{ fontFamily: "Inter,sans-serif", fontSize: 11, fill: "var(--on-surface-variant)" }}
