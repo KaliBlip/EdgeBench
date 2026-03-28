@@ -111,7 +111,7 @@ export default function TelemetryPanel({ jobs, devices, telemetry, selectedJobId
             const rec = filteredTelemetry.find((r) => r.runIndex === i && r.quantLevel === ql);
             if (rec) {
                 const tab = CHART_TABS.find((t) => t.id === activeTab)!;
-                point[ql] = (rec as Record<string, unknown>)[tab.field];
+                point[ql] = (rec as unknown as Record<string, number>)[tab.field];
             }
         }
         chartData.push(point);
@@ -300,7 +300,7 @@ export default function TelemetryPanel({ jobs, devices, telemetry, selectedJobId
                                 fontFamily: "Inter,sans-serif",
                                 fontSize: 12,
                             }}
-                            formatter={(v: unknown, name: string) => [`${typeof v === 'number' ? v.toFixed(2) : v} ${tab.unit}`, name]}
+                            formatter={(v: unknown, name?: string | number) => [`${typeof v === 'number' ? v.toFixed(2) : v} ${tab.unit}`, String(name ?? '')]}
                         />
                         <Legend
                             wrapperStyle={{ fontFamily: "Inter,sans-serif", fontSize: 12 }}
